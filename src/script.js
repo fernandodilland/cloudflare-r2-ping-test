@@ -618,7 +618,7 @@ function shareOnTwitter() {
     const fastestAbbrev = regionAbbreviations[fastest.name] || fastest.name;
     const slowestAbbrev = regionAbbreviations[slowest.name] || slowest.name;
     
-    const tweetText = `I tested @CloudflareDev R2 latency! Fastest region from my location: ${fastestAbbrev} (${fastest.average}ms), slowest: ${slowestAbbrev} (${slowest.average}ms). Test your latency at r2-ping.fernandodilland.com 🚀`;
+    const tweetText = `I tested @CloudflareDev R2 latency without cache! Fastest region from my location: ${fastestAbbrev} (${fastest.average}ms), slowest: ${slowestAbbrev} (${slowest.average}ms). Test your latency at r2-ping.fernandodilland.com 🚀`;
     
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, '_blank', 'noopener,noreferrer');
