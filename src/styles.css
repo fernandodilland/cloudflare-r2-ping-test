@@ -436,11 +436,29 @@ h2 {
     box-shadow: var(--shadow);
     transition: var(--transition);
     border: 1px solid var(--border-color);
+    /* Removed max-height and overflow-y to prevent double scroll */
+    display: flex;
+    flex-direction: column;
 }
 
 .result-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
+}
+
+/* Disable hover effects during active testing to prevent flickering */
+.result-card.testing {
+    transition: none !important;
+}
+
+.result-card.testing:hover {
+    transform: none !important;
+    box-shadow: var(--shadow) !important;
+}
+
+/* Smooth transitions for reordering when not testing */
+.result-card:not(.testing) {
+    transition: var(--transition), transform 0.3s ease;
 }
 
 /* Region performance colors - background based */
@@ -476,6 +494,7 @@ h2 {
     margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .result-title {
@@ -511,6 +530,7 @@ h2 {
 
 .test-progress {
     margin-bottom: 1rem;
+    flex-shrink: 0;
 }
 
 .test-progress small {
@@ -536,8 +556,11 @@ h2 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
     gap: 0.3rem;
-    max-height: 180px;
+    max-height: 200px;
     overflow-y: auto;
+    scroll-behavior: smooth;
+    flex: 1;
+    min-height: 120px;
 }
 
 .test-ping {
@@ -612,13 +635,6 @@ h2 {
     color: var(--light-text);
 }
 
-.test-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
 .test-ping {
     background: var(--white);
     padding: 0.5rem;
@@ -664,6 +680,8 @@ h2 {
     padding: 1.5rem;
     box-shadow: var(--shadow);
     transition: var(--transition);
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .region-card:hover {

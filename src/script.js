@@ -109,6 +109,9 @@ async function runRegionTest(regionKey, scenario) {
     const region = R2_ENDPOINTS[regionKey];
     if (!region) return;
     
+    // Get current test region selection to determine sorting behavior
+    const testRegion = document.getElementById('test-region').value;
+    
     // Get ping count from input
     const pingCountInput = document.getElementById('ping-count');
     const pingCount = Math.min(Math.max(parseInt(pingCountInput.value) || 10, 1), 1000);
@@ -148,12 +151,32 @@ async function runRegionTest(regionKey, scenario) {
     
     resultsContainer.appendChild(resultCard);
     
+    // Add testing class to disable hover effects during testing
+    resultCard.classList.add('testing');
+    
     // Run ping tests with custom count
     const pingResults = [];
     const progressBar = resultCard.querySelector('.progress-fill');
     const currentLatencyEl = resultCard.querySelector('.latency-current');
     const averageLatencyEl = resultCard.querySelector('.latency-average');
     const testDetailsEl = resultCard.querySelector('.test-details');
+    
+    // Add scroll event listener to track user interaction
+    let userHasScrolled = false;
+    let scrollTimeout;
+    
+    testDetailsEl.addEventListener('scroll', () => {
+        userHasScrolled = true;
+        clearTimeout(scrollTimeout);
+        
+        // Reset userHasScrolled after 3 seconds of no scrolling if at bottom
+        scrollTimeout = setTimeout(() => {
+            const isAtBottom = testDetailsEl.scrollTop >= (testDetailsEl.scrollHeight - testDetailsEl.clientHeight - 10);
+            if (isAtBottom) {
+                userHasScrolled = false;
+            }
+        }, 3000);
+    });
     
     for (let i = 0; i < pingCount; i++) {
         try {
@@ -187,35 +210,65 @@ async function runRegionTest(regionKey, scenario) {
                     <span class="ping-number">${i + 1}:</span>
                     <span class="ping-latency">${latency}ms</span>
                 `;
+                
+                // Store scroll position before adding the element
+                const wasScrolledToBottom = testDetailsEl.scrollTop >= (testDetailsEl.scrollHeight - testDetailsEl.clientHeight - 10);
+                
                 testDetailsEl.appendChild(pingEl);
                 
                 // Update ping color based on latency
                 updatePingColor(pingEl, latency);
                 
+                // Auto-scroll to bottom only if user hasn't manually scrolled or is at the bottom
+                if (!userHasScrolled || wasScrolledToBottom || i === 0) {
+                    testDetailsEl.scrollTop = testDetailsEl.scrollHeight;
+                }
+                
                 // Update progress
                 progressBar.style.width = `${((i + 1) / pingCount) * 100}%`;
                 
-                // Sort results after each ping
-                sortResultCards();
+                // Sort results periodically for multi-region tests (every 3 pings or on last ping)
+                // For single region tests, sorting is not necessary during testing
+                if (testRegion === 'all' && (i % 3 === 0 || i === pingCount - 1)) {
+                    sortResultCards();
+                }
                 
                 // Update region colors based on performance
                 updateRegionColors();
                 
-            } else {
-                // Handle error
-                const pingEl = document.createElement('div');
-                pingEl.className = 'test-ping ping-error';
-                pingEl.textContent = `${i + 1}: Error`;
-                testDetailsEl.appendChild(pingEl);
-            }
+        } else {
+            // Handle error
+            const pingEl = document.createElement('div');
+            pingEl.className = 'test-ping ping-error';
+            pingEl.textContent = `${i + 1}: Error`;
             
+            // Store scroll position before adding the element
+            const wasScrolledToBottom = testDetailsEl.scrollTop >= (testDetailsEl.scrollHeight - testDetailsEl.clientHeight - 10);
+            
+            testDetailsEl.appendChild(pingEl);
+            
+            // Auto-scroll to bottom only if user hasn't manually scrolled or is at the bottom
+            if (!userHasScrolled || wasScrolledToBottom || i === 0) {
+                testDetailsEl.scrollTop = testDetailsEl.scrollHeight;
+            }
+        }
+        
         } catch (error) {
             console.error(`Ping ${i + 1} failed:`, error);
             
             const pingEl = document.createElement('div');
             pingEl.className = 'test-ping ping-error';
             pingEl.textContent = `${i + 1}: Failed`;
+            
+            // Store scroll position before adding the element
+            const wasScrolledToBottom = testDetailsEl.scrollTop >= (testDetailsEl.scrollHeight - testDetailsEl.clientHeight - 10);
+            
             testDetailsEl.appendChild(pingEl);
+            
+            // Auto-scroll to bottom only if user hasn't manually scrolled or is at the bottom
+            if (!userHasScrolled || wasScrolledToBottom || i === 0) {
+                testDetailsEl.scrollTop = testDetailsEl.scrollHeight;
+            }
         }
         
         // Wait 1 second before next test (except for the last one)
@@ -244,6 +297,9 @@ async function runRegionTest(regionKey, scenario) {
         
         // Final region color update
         updateRegionColors();
+        
+        // Remove testing class to re-enable hover effects
+        resultCard.classList.remove('testing');
     }
 }
 
@@ -356,6 +412,18 @@ function sortResultCards() {
     const cards = Array.from(resultsContainer.querySelectorAll('.result-card'));
     if (cards.length < 2) return;
     
+    // Store current order to check if sorting is needed
+    const currentOrder = cards.map(card => card.id);
+    
+    // Store scroll positions for all test-details containers
+    const scrollPositions = new Map();
+    cards.forEach(card => {
+        const testDetails = card.querySelector('.test-details');
+        if (testDetails) {
+            scrollPositions.set(card.id, testDetails.scrollTop);
+        }
+    });
+    
     // Sort by average latency (ascending - lowest first)
     cards.sort((a, b) => {
         const avgA = parseInt(a.dataset.averageLatency) || 999999;
@@ -363,10 +431,23 @@ function sortResultCards() {
         return avgA - avgB;
     });
     
-    // Re-append cards in sorted order
-    cards.forEach(card => {
-        resultsContainer.appendChild(card);
-    });
+    // Check if order actually changed
+    const newOrder = cards.map(card => card.id);
+    const orderChanged = !currentOrder.every((id, index) => id === newOrder[index]);
+    
+    // Only re-append if order changed
+    if (orderChanged) {
+        // Re-append cards in sorted order
+        cards.forEach(card => {
+            resultsContainer.appendChild(card);
+            
+            // Restore scroll position
+            const testDetails = card.querySelector('.test-details');
+            if (testDetails && scrollPositions.has(card.id)) {
+                testDetails.scrollTop = scrollPositions.get(card.id);
+            }
+        });
+    }
 }
 
 function clearResults() {
