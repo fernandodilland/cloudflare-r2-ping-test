@@ -590,27 +590,27 @@ h2 {
 }
 
 /* Ping performance colors - subtle background gradients */
-.ping-excellent {
+.test-ping.ping-excellent {
     background: linear-gradient(135deg, rgba(39, 174, 96, 0.12) 0%, rgba(39, 174, 96, 0.05) 100%) !important;
     border: 1px solid rgba(39, 174, 96, 0.3) !important;
 }
 
-.ping-good {
+.test-ping.ping-good {
     background: linear-gradient(135deg, rgba(46, 204, 113, 0.12) 0%, rgba(46, 204, 113, 0.05) 100%) !important;
     border: 1px solid rgba(46, 204, 113, 0.3) !important;
 }
 
-.ping-fair {
+.test-ping.ping-fair {
     background: linear-gradient(135deg, rgba(243, 156, 18, 0.12) 0%, rgba(243, 156, 18, 0.05) 100%) !important;
     border: 1px solid rgba(243, 156, 18, 0.3) !important;
 }
 
-.ping-poor {
+.test-ping.ping-poor {
     background: linear-gradient(135deg, rgba(230, 126, 34, 0.12) 0%, rgba(230, 126, 34, 0.05) 100%) !important;
     border: 1px solid rgba(230, 126, 34, 0.3) !important;
 }
 
-.ping-slow {
+.test-ping.ping-slow {
     background: linear-gradient(135deg, rgba(231, 76, 60, 0.12) 0%, rgba(231, 76, 60, 0.05) 100%) !important;
     border: 1px solid rgba(231, 76, 60, 0.3) !important;
 }
@@ -633,37 +633,6 @@ h2 {
     border-top: 1px solid var(--border-color);
     font-size: 0.75rem;
     color: var(--light-text);
-}
-
-.test-ping {
-    background: var(--white);
-    padding: 0.5rem;
-    border-radius: var(--border-radius-small);
-    text-align: center;
-    font-size: 0.9rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.ping-success {
-    border-left: 3px solid var(--success-color);
-}
-
-.ping-error {
-    border-left: 3px solid var(--danger-color);
-    color: var(--danger-color);
-}
-
-.ping-number {
-    font-weight: bold;
-    font-size: 0.8rem;
-    color: var(--light-text);
-}
-
-.ping-latency {
-    font-weight: 600;
-    color: var(--dark-text);
 }
 
 /* Region info */

@@ -216,8 +216,11 @@ async function runRegionTest(regionKey, scenario) {
                 
                 testDetailsEl.appendChild(pingEl);
                 
-                // Update ping color based on latency
+                // Update ping color based on latency (will be updated when region completes)
                 updatePingColor(pingEl, latency);
+                
+                // Update colors for all pings in this region based on current min/max
+                updateRegionPingColors(resultCard, pingResults);
                 
                 // Auto-scroll to bottom only if user hasn't manually scrolled or is at the bottom
                 if (!userHasScrolled || wasScrolledToBottom || i === 0) {
@@ -241,6 +244,7 @@ async function runRegionTest(regionKey, scenario) {
             const pingEl = document.createElement('div');
             pingEl.className = 'test-ping ping-error';
             pingEl.textContent = `${i + 1}: Error`;
+            pingEl.dataset.latency = '999999'; // High value for errors
             
             // Store scroll position before adding the element
             const wasScrolledToBottom = testDetailsEl.scrollTop >= (testDetailsEl.scrollHeight - testDetailsEl.clientHeight - 10);
@@ -259,6 +263,7 @@ async function runRegionTest(regionKey, scenario) {
             const pingEl = document.createElement('div');
             pingEl.className = 'test-ping ping-error';
             pingEl.textContent = `${i + 1}: Failed`;
+            pingEl.dataset.latency = '999999'; // High value for errors
             
             // Store scroll position before adding the element
             const wasScrolledToBottom = testDetailsEl.scrollTop >= (testDetailsEl.scrollHeight - testDetailsEl.clientHeight - 10);
@@ -297,6 +302,9 @@ async function runRegionTest(regionKey, scenario) {
         
         // Final region color update
         updateRegionColors();
+        
+        // Final ping colors update for this region
+        updateRegionPingColors(resultCard, pingResults);
         
         // Remove testing class to re-enable hover effects
         resultCard.classList.remove('testing');
@@ -341,27 +349,50 @@ function createResultCard(regionName, scenario, testUrl, pingCount) {
 }
 
 function updatePingColor(pingElement, latency) {
-    // Define thresholds for ping colors
-    const excellent = 50;  // <= 50ms = green
-    const good = 100;      // <= 100ms = yellow-green
-    const fair = 200;      // <= 200ms = yellow
-    const poor = 400;      // <= 400ms = orange
-    // > 400ms = red
+    // This function now just adds a temporary class
+    // The actual colors will be determined by updateRegionPingColors
+    pingElement.dataset.latency = latency;
+}
+
+function updateRegionPingColors(resultCard, pingResults) {
+    if (pingResults.length === 0) return;
     
-    let colorClass = '';
-    if (latency <= excellent) {
-        colorClass = 'ping-excellent';
-    } else if (latency <= good) {
-        colorClass = 'ping-good';
-    } else if (latency <= fair) {
-        colorClass = 'ping-fair';
-    } else if (latency <= poor) {
-        colorClass = 'ping-poor';
-    } else {
-        colorClass = 'ping-slow';
-    }
+    const minLatency = Math.min(...pingResults);
+    const maxLatency = Math.max(...pingResults);
+    const range = maxLatency - minLatency;
     
-    pingElement.classList.add(colorClass);
+    // Get all ping elements in this region
+    const pingElements = resultCard.querySelectorAll('.test-ping.ping-success');
+    
+    pingElements.forEach(pingEl => {
+        const latency = parseInt(pingEl.dataset.latency);
+        if (isNaN(latency)) return;
+        
+        // Remove existing color classes
+        pingEl.classList.remove('ping-excellent', 'ping-good', 'ping-fair', 'ping-poor', 'ping-slow');
+        
+        // Calculate position in range (0 = fastest, 1 = slowest)
+        let position = 0;
+        if (range > 0) {
+            position = (latency - minLatency) / range;
+        }
+        
+        // Assign color class based on position within this region's range
+        let colorClass = '';
+        if (position === 0 || range === 0) {
+            colorClass = 'ping-excellent'; // Fastest in region
+        } else if (position <= 0.25) {
+            colorClass = 'ping-good';      // Top 25%
+        } else if (position <= 0.5) {
+            colorClass = 'ping-fair';      // Top 50%
+        } else if (position <= 0.75) {
+            colorClass = 'ping-poor';      // Bottom 25%
+        } else {
+            colorClass = 'ping-slow';      // Slowest 25%
+        }
+        
+        pingEl.classList.add(colorClass);
+    });
 }
 
 function updateRegionColors() {
