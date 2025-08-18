@@ -51,6 +51,16 @@ function initializeEventListeners() {
     // Test button
     const startTestBtn = document.getElementById('start-test');
     startTestBtn.addEventListener('click', startPingTests);
+    
+    // Download chart button
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#download-chart')) {
+            downloadChart();
+        }
+        if (e.target.closest('#share-twitter')) {
+            shareOnTwitter();
+        }
+    });
 }
 
 // Ping test functions
@@ -60,6 +70,18 @@ async function startPingTests() {
     isTestRunning = true;
     const testScenario = document.getElementById('test-scenario').value;
     const testRegion = document.getElementById('test-region').value;
+    
+    // Hide comparative chart if conditions are not met
+    const chartSection = document.getElementById('comparative-chart-section');
+    if (!(testRegion === 'all' && testScenario === 'custom-no-cache')) {
+        if (chartSection) {
+            chartSection.style.display = 'none';
+        }
+        if (comparativeChart) {
+            comparativeChart.destroy();
+            comparativeChart = null;
+        }
+    }
     
     // Disable test button
     const startBtn = document.getElementById('start-test');
@@ -158,8 +180,10 @@ async function runRegionTest(regionKey, scenario) {
     const chart = await createLatencyChart(resultCard, region.name);
     const chartId = `chart-${region.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
     
-    // Create or show comparative chart if not exists
-    if (!comparativeChart) {
+    // Create or show comparative chart only for "all regions" + "custom-no-cache"
+    const currentTestRegion = document.getElementById('test-region').value;
+    const currentTestScenario = document.getElementById('test-scenario').value;
+    if (currentTestRegion === 'all' && currentTestScenario === 'custom-no-cache' && !comparativeChart) {
         await createComparativeChart();
     }
     
@@ -210,8 +234,12 @@ async function runRegionTest(regionKey, scenario) {
                 // Update chart with new latency data
                 updateLatencyChart(chartId, latency, i + 1);
                 
-                // Update comparative chart
-                updateComparativeChart(region.name, i + 1, latency);
+                // Update comparative chart only for "all regions" + "custom-no-cache"
+                const currentTestRegion = document.getElementById('test-region').value;
+                const currentTestScenario = document.getElementById('test-scenario').value;
+                if (currentTestRegion === 'all' && currentTestScenario === 'custom-no-cache') {
+                    updateComparativeChart(region.name, i + 1, latency);
+                }
                 
                 // Calculate and update average
                 const average = Math.round(pingResults.reduce((a, b) => a + b, 0) / pingResults.length);
@@ -538,6 +566,62 @@ function showError(message) {
             <strong>Error:</strong> ${message}
         </div>
     `;
+}
+
+// Function to download chart as image
+function downloadChart() {
+    if (!comparativeChart) return;
+    
+    const canvas = document.getElementById('comparative-chart');
+    const link = document.createElement('a');
+    link.download = `cloudflare-r2-latency-test-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+// Function to share results on Twitter
+function shareOnTwitter() {
+    if (!comparativeChart || !comparativeChart.data.datasets.length) return;
+    
+    // Calculate fastest and slowest regions
+    const regionAverages = [];
+    
+    comparativeChart.data.datasets.forEach(dataset => {
+        if (dataset.data.length > 0) {
+            const sum = dataset.data.reduce((acc, point) => acc + point.y, 0);
+            const average = Math.round(sum / dataset.data.length);
+            regionAverages.push({
+                name: dataset.label,
+                average: average
+            });
+        }
+    });
+    
+    if (regionAverages.length === 0) return;
+    
+    // Sort by average latency
+    regionAverages.sort((a, b) => a.average - b.average);
+    
+    const fastest = regionAverages[0];
+    const slowest = regionAverages[regionAverages.length - 1];
+    
+    // Create abbreviated region names for Twitter
+    const regionAbbreviations = {
+        'Eastern Europe (EEUR)': 'EEUR',
+        'Western North America (WNAM)': 'WNAM',
+        'Eastern North America (ENAM)': 'ENAM',
+        'Oceania (OC)': 'OC',
+        'Western Europe (WEUR)': 'WEUR',
+        'Asia Pacific (APAC)': 'APAC'
+    };
+    
+    const fastestAbbrev = regionAbbreviations[fastest.name] || fastest.name;
+    const slowestAbbrev = regionAbbreviations[slowest.name] || slowest.name;
+    
+    const tweetText = `I tested @CloudflareDev R2 latency! Fastest region from my location: ${fastestAbbrev} (${fastest.average}ms), slowest: ${slowestAbbrev} (${slowest.average}ms). Test your latency at r2-ping.fernandodilland.com 🚀`;
+    
+    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+    window.open(tweetUrl, '_blank', 'noopener,noreferrer');
 }
 
 // Export for debugging
