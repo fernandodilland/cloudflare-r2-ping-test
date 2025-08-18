@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <meta name="description" content="Test latency and performance to Cloudflare R2 buckets across different regions worldwide. Compare caching scenarios and optimize your R2 deployment.">
     <meta name="keywords" content="Cloudflare R2, latency test, ping test, performance, CDN, edge computing, regions">
+    <!-- Chart.js from Cloudflare CDN for minimal progress visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js" integrity="sha512-6HrPqAvK+lZElIZ4mZ64fyxIBTsaX5zAFZg2V/2WT+iKPrFzTzvx6QAsLW2OaLwobhMYBog/+bvmIEEGXi0p1w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <header class="header">
@@ -57,15 +59,24 @@
             </div>
         </section>
 
-    <section class="results-section">
+        <section class="results-section">
             <div id="results-container" class="results-container">
                 <div class="no-results">
                     No tests have been run yet. Click "Start Test" to begin testing latency across different regions.
                 </div>
             </div>
-        </section>
-
-        <section class="intro-section">
+            
+            <!-- Comparative Chart Section -->
+            <div id="comparative-chart-section" class="comparative-chart-section" style="display: none;">
+                <div class="chart-header">
+                    <h3>Latency Comparison</h3>
+                    <p>Real-time latency comparison across regions</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="comparative-chart"></canvas>
+                </div>
+            </div>
+        </section>        <section class="intro-section">
             <h2>What is this tool?</h2>
             <p>
                 This website allows you to test the latency (ping) from your browser to Cloudflare R2 buckets 

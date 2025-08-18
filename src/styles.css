@@ -536,20 +536,173 @@ h2 {
 .test-progress small {
     color: var(--light-text);
     font-size: 0.75rem;
+    margin-top: 0.3rem;
+    display: block;
 }
 
 .progress-bar {
     background: var(--light-bg);
-    height: 4px;
-    border-radius: 2px;
+    height: 6px;
+    border-radius: 3px;
     overflow: hidden;
-    margin: 0.4rem 0;
+    margin: 0.4rem 0 0.2rem 0;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .progress-fill {
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    background: linear-gradient(90deg, 
+        #22c55e 0%,   /* Green start */
+        #3b82f6 25%,  /* Blue */
+        #8b5cf6 50%,  /* Purple */
+        #f59e0b 75%,  /* Orange */
+        #ef4444 100%  /* Red end */
+    );
     height: 100%;
-    transition: width 0.3s ease;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border-radius: 3px;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.3) 50%, 
+        transparent 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    color: var(--light-text);
+    margin-top: 0.2rem;
+}
+
+.progress-count {
+    font-weight: 500;
+}
+
+.progress-percentage {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.latency-chart-container {
+    margin: 0.5rem 0 !important;
+    height: 40px !important;
+    position: relative !important;
+    background: rgba(255,255,255,0.5) !important;
+    border-radius: 4px !important;
+    padding: 2px !important;
+    border: 1px solid rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.latency-chart-container canvas {
+    width: 100% !important;
+    height: 36px !important;
+}
+
+/* Comparative Chart Styles */
+.comparative-chart-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--light-border);
+}
+
+.chart-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header h3 {
+    color: var(--dark-text);
+    margin-bottom: 0.5rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.chart-header p {
+    color: var(--light-text);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.02) 0%, 
+        rgba(139, 92, 246, 0.02) 50%, 
+        rgba(34, 197, 94, 0.02) 100%
+    );
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.chart-container canvas {
+    border-radius: 4px;
+}
+
+/* Chart legends and labels */
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--light-border);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--light-text);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+    .comparative-chart-section {
+        margin: 1rem;
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+        padding: 0.5rem;
+    }
+    
+    .chart-header h3 {
+        font-size: 1.2rem;
+    }
 }
 
 .test-details {

@@ -154,9 +154,20 @@ async function runRegionTest(regionKey, scenario) {
     // Add testing class to disable hover effects during testing
     resultCard.classList.add('testing');
     
+    // Create mini latency chart
+    const chart = await createLatencyChart(resultCard, region.name);
+    const chartId = `chart-${region.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    
+    // Create or show comparative chart if not exists
+    if (!comparativeChart) {
+        await createComparativeChart();
+    }
+    
     // Run ping tests with custom count
     const pingResults = [];
     const progressBar = resultCard.querySelector('.progress-fill');
+    const progressCount = resultCard.querySelector('.progress-count');
+    const progressPercentage = resultCard.querySelector('.progress-percentage');
     const currentLatencyEl = resultCard.querySelector('.latency-current');
     const averageLatencyEl = resultCard.querySelector('.latency-average');
     const testDetailsEl = resultCard.querySelector('.test-details');
@@ -196,6 +207,12 @@ async function runRegionTest(regionKey, scenario) {
                 // Update current latency
                 currentLatencyEl.textContent = `${latency}ms`;
                 
+                // Update chart with new latency data
+                updateLatencyChart(chartId, latency, i + 1);
+                
+                // Update comparative chart
+                updateComparativeChart(region.name, i + 1, latency);
+                
                 // Calculate and update average
                 const average = Math.round(pingResults.reduce((a, b) => a + b, 0) / pingResults.length);
                 averageLatencyEl.textContent = `${average}ms`;
@@ -228,7 +245,10 @@ async function runRegionTest(regionKey, scenario) {
                 }
                 
                 // Update progress
-                progressBar.style.width = `${((i + 1) / pingCount) * 100}%`;
+                const currentProgress = ((i + 1) / pingCount) * 100;
+                progressBar.style.width = `${currentProgress}%`;
+                progressCount.textContent = `${i + 1} / ${pingCount} pings`;
+                progressPercentage.textContent = `${Math.round(currentProgress)}%`;
                 
                 // Sort results periodically for multi-region tests (every 3 pings or on last ping)
                 // For single region tests, sorting is not necessary during testing
@@ -340,7 +360,11 @@ function createResultCard(regionName, scenario, testUrl, pingCount) {
             <div class="progress-bar">
                 <div class="progress-fill" style="width: 0%"></div>
             </div>
-            <small>Scenario: ${scenarioNames[scenario]} (${pingCount} pings)</small>
+            <div class="progress-stats">
+                <span class="progress-count">0 / ${pingCount} pings</span>
+                <span class="progress-percentage">0%</span>
+            </div>
+            <small>Scenario: ${scenarioNames[scenario]}</small>
         </div>
         <div class="test-details"></div>
     `;
@@ -484,6 +508,9 @@ function sortResultCards() {
 function clearResults() {
     const resultsContainer = document.querySelector('.results-container');
     if (resultsContainer) {
+        // Cleanup charts before removing cards
+        cleanupCharts();
+        
         // Remove all existing result cards
         const existingCards = resultsContainer.querySelectorAll('.result-card');
         existingCards.forEach(card => card.remove());
@@ -518,3 +545,300 @@ window.R2PingTest = {
     startPingTests,
     R2_ENDPOINTS
 };
+
+// Global chart instances for cleanup
+const chartInstances = new Map();
+let comparativeChart = null;
+
+// Wait for Chart.js to load
+function waitForChart() {
+    return new Promise((resolve) => {
+        if (typeof Chart !== 'undefined') {
+            resolve();
+        } else {
+            const checkChart = setInterval(() => {
+                if (typeof Chart !== 'undefined') {
+                    clearInterval(checkChart);
+                    resolve();
+                }
+            }, 100);
+        }
+    });
+}
+
+// Function to create a mini chart for latency visualization
+async function createLatencyChart(resultCard, regionName) {
+    await waitForChart();
+    
+    // Create canvas element for the chart
+    const chartContainer = document.createElement('div');
+    chartContainer.className = 'latency-chart-container';
+    chartContainer.style.cssText = `
+        height: 40px;
+        margin: 0.5rem 0;
+        position: relative;
+        background: rgba(255,255,255,0.5);
+        border-radius: 4px;
+        padding: 2px;
+    `;
+    
+    const canvas = document.createElement('canvas');
+    canvas.id = `chart-${regionName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    canvas.style.cssText = 'width: 100%; height: 36px;';
+    
+    chartContainer.appendChild(canvas);
+    
+    // Insert chart after progress bar
+    const progressContainer = resultCard.querySelector('.test-progress');
+    progressContainer.appendChild(chartContainer);
+    
+    // Initialize Chart.js
+    const ctx = canvas.getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Latency (ms)',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            scales: {
+                x: { display: false },
+                y: { 
+                    display: false,
+                    beginAtZero: false
+                }
+            },
+            elements: {
+                line: {
+                    borderWidth: 1.5
+                }
+            },
+            animation: {
+                duration: 300
+            }
+        }
+    });
+    
+    chartInstances.set(canvas.id, chart);
+    return chart;
+}
+
+// Function to update chart with new latency data
+function updateLatencyChart(chartId, latency, pingNumber) {
+    const chart = chartInstances.get(chartId);
+    if (!chart) return;
+    
+    chart.data.labels.push(pingNumber);
+    chart.data.datasets[0].data.push(latency);
+    
+    // Keep only last 20 points for performance
+    if (chart.data.labels.length > 20) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+    }
+    
+    chart.update('none');
+}
+
+// Function to cleanup charts when clearing results
+function cleanupCharts() {
+    chartInstances.forEach(chart => {
+        chart.destroy();
+    });
+    chartInstances.clear();
+    
+    if (comparativeChart) {
+        comparativeChart.destroy();
+        comparativeChart = null;
+    }
+    
+    // Hide comparative chart section
+    const chartSection = document.getElementById('comparative-chart-section');
+    if (chartSection) {
+        chartSection.style.display = 'none';
+    }
+}
+
+// Color palette for regions
+const regionColors = {
+    'Eastern Europe (EEUR)': '#ef4444',
+    'Western North America (WNAM)': '#3b82f6', 
+    'Eastern North America (ENAM)': '#8b5cf6',
+    'Oceania (OC)': '#f59e0b',
+    'Western Europe (WEUR)': '#22c55e',
+    'Asia Pacific (APAC)': '#ec4899'
+};
+
+// Function to create comparative chart
+async function createComparativeChart() {
+    await waitForChart();
+    
+    const chartSection = document.getElementById('comparative-chart-section');
+    const canvas = document.getElementById('comparative-chart');
+    
+    if (!canvas || comparativeChart) return;
+    
+    chartSection.style.display = 'block';
+    
+    const ctx = canvas.getContext('2d');
+    comparativeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 12
+                        },
+                        color: '#64748b'
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderWidth: 1,
+                    cornerRadius: 6,
+                    callbacks: {
+                        title: function(context) {
+                            return `Ping #${context[0].label}`;
+                        },
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y}ms`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Ping Number',
+                        color: '#64748b',
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: {
+                            size: 10
+                        }
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Latency (ms)',
+                        color: '#64748b',
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: {
+                            size: 10
+                        }
+                    },
+                    beginAtZero: false
+                }
+            },
+            elements: {
+                line: {
+                    borderWidth: 2,
+                    tension: 0.2
+                },
+                point: {
+                    radius: 3,
+                    hoverRadius: 6,
+                    borderWidth: 2
+                }
+            },
+            animation: {
+                duration: 400,
+                easing: 'easeInOutQuart'
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+}
+
+// Function to add or update region in comparative chart
+function updateComparativeChart(regionName, pingNumber, latency) {
+    if (!comparativeChart) return;
+    
+    // Find or create dataset for this region
+    let dataset = comparativeChart.data.datasets.find(d => d.label === regionName);
+    
+    if (!dataset) {
+        const color = regionColors[regionName] || '#64748b';
+        dataset = {
+            label: regionName,
+            data: [],
+            borderColor: color,
+            backgroundColor: color + '20',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.2,
+            pointBackgroundColor: color,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 3,
+            pointHoverRadius: 6
+        };
+        comparativeChart.data.datasets.push(dataset);
+    }
+    
+    // Update data
+    dataset.data.push({ x: pingNumber, y: latency });
+    
+    // Update labels if needed
+    if (!comparativeChart.data.labels.includes(pingNumber)) {
+        comparativeChart.data.labels.push(pingNumber);
+        comparativeChart.data.labels.sort((a, b) => a - b);
+    }
+    
+    // Update chart
+    comparativeChart.update('none');
+}
