@@ -1,6 +1,10 @@
 # Cloudflare R2 Ping Test
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/fernandodilland/cloudflare-r2-ping-test)
+
 A comprehensive testing suite for Cloudflare R2 CDN caching behavior across multiple regions with different cache control headers.
+
+This project is a static site built for Cloudflare Workers, with all source files located in the `src/` directory. The repository also includes `upload-test-files.py` to help you upload test files to your R2 buckets after configuring them (see setup instructions below).
 
 ## 🌐 Web Interface
 
