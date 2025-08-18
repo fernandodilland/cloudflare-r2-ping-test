@@ -1,5 +1,5 @@
 # Cloudflare R2 Ping Test
-[**Demo website:**](https://r2-ping.fernandodilland.com/) https://r2-ping.fernandodilland.com/
+Demo website: https://r2-ping.fernandodilland.com/
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/fernandodilland/cloudflare-r2-ping-test)
 
