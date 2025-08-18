@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | Cloudflare R2 Ping Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            color: var(--dark-text);
+            margin: 1rem 0 2rem;
+        }
+        
+        .home-button {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--white);
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius-small);
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main.container {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="header-title">
+                Cloudflare R2 Ping Test
+            </h1>
+            <p>Test latency to R2 buckets across different regions</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="error-container">
+            <div class="error-code">404</div>
+            <div class="error-message">
+                Oops! The page you're looking for doesn't exist.
+            </div>
+            <a href="/" class="home-button">
+                <span>Go Home</span>
+            </a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>
+                <a class="footer-link" href="https://github.com/fernandodilland/cloudflare-r2-ping-test" target="_blank" rel="noopener">GitHub Repository</a>
+                <a class="footer-link" href="https://github.com/fernandodilland/cloudflare-r2-ping-test/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

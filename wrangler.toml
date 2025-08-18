@@ -1,0 +1,7 @@
+name = "cloudflare-r2-ping-test"
+compatibility_date = "2025-08-08"
+
+[assets]
+directory = "./src"
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"

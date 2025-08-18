@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudflare R2 Ping Test - Test Latency to R2 Buckets Across Regions</title>
+    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="Test latency and performance to Cloudflare R2 buckets across different regions worldwide. Compare caching scenarios and optimize your R2 deployment.">
+    <meta name="keywords" content="Cloudflare R2, latency test, ping test, performance, CDN, edge computing, regions">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="header-title">
+                Cloudflare R2 Ping Test
+            </h1>
+            <p>Test latency to R2 buckets across different regions with various caching configurations</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="test-controls">
+            <div class="control-panel" style="margin-top: 24px;">
+                <div class="controls-grid">
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="test-scenario">Test Scenario:</label>
+                            <select id="test-scenario" class="control-select small-select">
+                                <option value="custom-no-cache">Custom Domain - No Cache</option>
+                                <option value="custom-cache">Custom Domain - With Cache</option>
+                                <option value="dev">Public Development (r2.dev)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="test-region">Region:</label>
+                            <select id="test-region" class="control-select small-select">
+                                <option value="all">All Regions</option>
+                                <option value="eeur">Eastern Europe (EEUR)</option>
+                                <option value="wnam">Western North America (WNAM)</option>
+                                <option value="enam">Eastern North America (ENAM)</option>
+                                <option value="oc">Oceania (OC)</option>
+                                <option value="weur">Western Europe (WEUR)</option>
+                                <option value="apac">Asia Pacific (APAC)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="ping-count">Ping Count:</label>
+                            <input type="number" id="ping-count" class="control-input small-input" min="1" max="1000" value="10">
+                        </div>
+                        <div class="control-group">
+                            <button id="start-test" class="test-button small-button">
+                                <span class="button-text">Start Test</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    <section class="results-section">
+            <div id="results-container" class="results-container">
+                <div class="no-results">
+                    No tests have been run yet. Click "Start Test" to begin testing latency across different regions.
+                </div>
+            </div>
+        </section>
+
+        <section class="intro-section">
+            <h2>What is this tool?</h2>
+            <p>
+                This website allows you to test the latency (ping) from your browser to Cloudflare R2 buckets 
+                located in different regions around the world. You can test three different scenarios to understand 
+                how caching affects performance.
+            </p>
+        </section>
+
+        <section class="test-scenarios">
+            <h2>Test Scenarios</h2>
+            
+            <div class="scenario-grid">
+                <div class="scenario-card scenario-dev">
+                    <div class="scenario-header">
+                        <h3>Public Development Link (r2.dev)</h3>
+                        <span class="status-badge not-recommended">Not Recommended for Production</span>
+                    </div>
+                    <p>
+                        Tests ping to public development URLs without cache. These links are provided by Cloudflare 
+                        for development purposes and should not be used in production environments.
+                    </p>
+                    <div class="scenario-features">
+                        <span class="feature-tag">✗ No Cache</span>
+                        <span class="feature-tag">⚡ Direct to Origin</span>
+                        <span class="feature-tag">🔓 Public Access</span>
+                    </div>
+                </div>
+
+                <div class="scenario-card scenario-custom-no-cache">
+                    <div class="scenario-header">
+                        <h3>Custom Domain without Cache</h3>
+                        <span class="status-badge recommended">Recommended for Testing</span>
+                    </div>
+                    <p>
+                        Tests ping to custom domains configured to bypass Cloudflare's CDN cache. 
+                        This scenario shows the raw performance to R2 without caching benefits.
+                    </p>
+                    <div class="scenario-features">
+                        <span class="feature-tag">✗ No Cache</span>
+                        <span class="feature-tag">🌐 Custom Domain</span>
+                        <span class="feature-tag">🔒 Secure</span>
+                    </div>
+                </div>
+
+                <div class="scenario-card scenario-custom-cache">
+                    <div class="scenario-header">
+                        <h3>Custom Domain with Cache</h3>
+                        <span class="status-badge best">Best Performance</span>
+                    </div>
+                    <p>
+                        Tests ping to custom domains with Cloudflare CDN caching enabled. 
+                        This scenario demonstrates the performance benefits of edge caching.
+                    </p>
+                    <div class="scenario-features">
+                        <span class="feature-tag">✓ CDN Cache</span>
+                        <span class="feature-tag">🌐 Custom Domain</span>
+                        <span class="feature-tag">⚡ Edge Optimized</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="region-info">
+            <h2>Region Information</h2>
+            <div class="region-grid">
+                <div class="region-card">
+                    <h3>Eastern Europe (EEUR)</h3>
+                    <div class="region-details">
+                        <p><strong>Location:</strong> Central/Eastern Europe</p>
+                    </div>
+                </div>
+
+                <div class="region-card">
+                    <h3>Western North America (WNAM)</h3>
+                    <div class="region-details">
+                        <p><strong>Location:</strong> Western United States & Canada</p>
+                    </div>
+                </div>
+
+                <div class="region-card">
+                    <h3>Eastern North America (ENAM)</h3>
+                    <div class="region-details">
+                        <p><strong>Location:</strong> Eastern United States & Canada</p>
+                    </div>
+                </div>
+
+                <div class="region-card">
+                    <h3>Oceania (OC)</h3>
+                    <div class="region-details">
+                        <p><strong>Location:</strong> Australia & New Zealand</p>
+                    </div>
+                </div>
+
+                <div class="region-card">
+                    <h3>Western Europe (WEUR)</h3>
+                    <div class="region-details">
+                        <p><strong>Location:</strong> Western Europe</p>
+                    </div>
+                </div>
+
+                <div class="region-card">
+                    <h3>Asia Pacific (APAC)</h3>
+                    <div class="region-details">
+                        <p><strong>Location:</strong> Asia Pacific Region</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+    <footer class="footer">
+        <div class="container">
+            <p>
+                <a class="footer-link" href="https://github.com/fernandodilland/cloudflare-r2-ping-test" target="_blank" rel="noopener">GitHub Repository</a>
+                <a class="footer-link" href="https://github.com/fernandodilland/cloudflare-r2-ping-test/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
