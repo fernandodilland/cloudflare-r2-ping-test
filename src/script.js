@@ -41,6 +41,9 @@ const R2_ENDPOINTS = {
 // Global state
 let currentTests = [];
 let isTestRunning = false;
+let isTestPaused = false;
+let pauseStartTime = 0;
+let accumulatedPauseTime = 0;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -61,6 +64,25 @@ function initializeEventListeners() {
             shareOnTwitter();
         }
     });
+    
+    // Key press event for starting tests
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !isTestRunning) {
+            startPingTests();
+        }
+    });
+    
+    // Pause and Stop buttons
+    const pauseBtn = document.getElementById('pause-test');
+    const stopBtn = document.getElementById('stop-test');
+    
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', togglePause);
+    }
+    
+    if (stopBtn) {
+        stopBtn.addEventListener('click', stopTests);
+    }
 }
 
 // Ping test functions
@@ -214,6 +236,11 @@ async function runRegionTest(regionKey, scenario) {
     });
     
     for (let i = 0; i < pingCount; i++) {
+        // Check for pause
+        while (isTestPaused) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
         try {
             const startTime = performance.now();
             
@@ -925,4 +952,42 @@ function updateComparativeChart(regionName, pingNumber, latency) {
     
     // Update chart
     comparativeChart.update('none');
+}
+
+// Function to toggle pause/resume of tests
+function togglePause() {
+    isTestPaused = !isTestPaused;
+    const pauseBtn = document.getElementById('pause-test');
+    if (pauseBtn) {
+        const pauseIcon = pauseBtn.querySelector('.pause-icon');
+        const resumeIcon = pauseBtn.querySelector('.resume-icon');
+        
+        if (isTestPaused) {
+            // Change to resume icon
+            pauseIcon.style.display = 'none';
+            resumeIcon.style.display = 'inline';
+        } else {
+            // Change to pause icon
+            pauseIcon.style.display = 'inline';
+            resumeIcon.style.display = 'none';
+        }
+    }
+}
+
+// Function to stop all tests
+function stopTests() {
+    isTestRunning = false;
+    isTestPaused = false;
+    
+    // Reset pause button UI
+    const pauseBtn = document.getElementById('pause-test');
+    if (pauseBtn) {
+        const pauseIcon = pauseBtn.querySelector('.pause-icon');
+        const resumeIcon = pauseBtn.querySelector('.resume-icon');
+        pauseIcon.style.display = 'inline';
+        resumeIcon.style.display = 'none';
+    }
+    
+    // Optionally, clear results or navigate away
+    clearResults();
 }
